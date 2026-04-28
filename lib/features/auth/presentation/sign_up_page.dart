@@ -6,18 +6,18 @@ import 'package:ripple/const/theme/app_colors.dart';
 import 'package:ripple/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:ripple/features/auth/presentation/bloc/auth_event.dart';
 import 'package:ripple/shared/widgets/auth_widgets/field_label.dart';
-import 'package:ripple/shared/widgets/gradient_border_field.dart';
+import 'package:ripple/shared/common_widgets/gradient_border_field.dart';
 import 'package:ripple/shared/widgets/auth_widgets/gradient_button.dart';
 import 'package:ripple/shared/widgets/auth_widgets/gradient_text.dart';
 
-class SignupPage extends StatefulWidget {
-  const SignupPage({super.key});
+class SignUpPage extends StatefulWidget {
+  const SignUpPage({super.key});
 
   @override
-  State<SignupPage> createState() => _SignupPageState();
+  State<SignUpPage> createState() => _SignUpPageState();
 }
 
-class _SignupPageState extends State<SignupPage>
+class _SignUpPageState extends State<SignUpPage>
     with SingleTickerProviderStateMixin {
   final _nameController = TextEditingController();
   final _usernameController = TextEditingController();

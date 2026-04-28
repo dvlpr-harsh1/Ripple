@@ -48,6 +48,10 @@ class AppTheme {
       selectedIconTheme: IconThemeData(color: Colors.deepPurple),
       unselectedIconTheme: IconThemeData(color: Colors.white60),
     ),
+    floatingActionButtonTheme: FloatingActionButtonThemeData(
+      backgroundColor: Colors.transparent,
+      foregroundColor: Colors.transparent,
+    ),
   );
 
   static final themeLight = ThemeData(

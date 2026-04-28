@@ -1,26 +1,38 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
 import 'package:ripple/const/Strings/app_strings.dart';
 import 'package:ripple/const/errors/app_errors.dart';
-import 'package:ripple/features/auth/data/model/user_model.dart';
-import 'package:ripple/features/auth/domain/entities/user_entity.dart';
+import 'package:ripple/features/auth/data/model/user_auth_model.dart';
+import 'package:ripple/features/auth/domain/entities/user_auth_entity.dart';
 import 'package:ripple/features/auth/domain/repositories/auth_repository.dart';
 import 'package:ripple/features/profile/data/model/user_profile.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
-  final _auth = FirebaseAuth.instance;
-  final _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth;
+  final FirebaseFirestore _firestore;
+
+  AuthRepositoryImpl({FirebaseAuth? auth, FirebaseFirestore? firestore})
+    : _auth = auth ?? FirebaseAuth.instance,
+      _firestore = firestore ?? FirebaseFirestore.instance;
 
   @override
-  UserEntity? get currentUser {
+  UserAuthEntity? get currentUser {
     final user = _auth.currentUser;
     if (user == null) return null;
-    return UserModel.fromFirebase(user);
+    return UserAuthModel.fromFirebase(user);
   }
+  // In AuthRepositoryImpl — call this after login and on app start
+Future<void> setOnlineStatus(bool isOnline) async {
+  final uid = FirebaseAuth.instance.currentUser?.uid;
+  if (uid == null) return;
+  await FirebaseFirestore.instance
+      .collection(AppStrings.firebaseCollection)
+      .doc(uid)
+      .update({'isOnline': isOnline});
+}
 
   @override
-  Future<UserEntity> logIn({
+  Future<UserAuthEntity> logIn({
     required String email,
     required String password,
   }) async {
@@ -30,7 +42,7 @@ class AuthRepositoryImpl implements AuthRepository {
         password: password,
       );
 
-      return UserModel.fromFirebase(credential.user!);
+      return UserAuthModel.fromFirebase(credential.user!);
     } on FirebaseAuthException catch (err) {
       throw firebaseAuthErrorToMessage(err.code.toString());
     } catch (e) {
@@ -39,7 +51,7 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<UserEntity> signUp({
+  Future<UserAuthEntity> signUp({
     required String email,
     required String password,
     required String confirmPassword,
@@ -53,10 +65,12 @@ class AuthRepositoryImpl implements AuthRepository {
         password: password,
       );
       _firestore
-          .collection(AppStrings.firebaseCol)
+          .collection(AppStrings.firebaseCollection)
           .doc(currentUser!.id.toString())
           .set(
             UserProfile(
+              nameLower: name.toLowerCase(),
+              usernameLower: username.toLowerCase(),
               id: currentUser!.id,
               name: name,
               email: email,
@@ -65,7 +79,7 @@ class AuthRepositoryImpl implements AuthRepository {
             ).toMap(),
           );
 
-      return UserModel.fromFirebase(credential.user!);
+      return UserAuthModel.fromFirebase(credential.user!);
     } on FirebaseAuthException catch (err) {
       throw AuthErrors(
         message: firebaseAuthErrorToMessage(err.code.toString()),

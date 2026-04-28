@@ -1,10 +1,10 @@
 import 'package:ripple/features/auth/data/repositories/auth_repository.dart';
-import 'package:ripple/features/auth/domain/entities/user_entity.dart';
+import 'package:ripple/features/auth/domain/entities/user_auth_entity.dart';
 
 class SignUpUsecase {
   final AuthRepositoryImpl repository;
   SignUpUsecase({required this.repository});
-  Future<UserEntity> call({
+  Future<UserAuthEntity> call({
     required String email,
     required String password,
     required String confirmPassword,

@@ -6,7 +6,7 @@ import 'package:ripple/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:ripple/features/auth/presentation/bloc/auth_event.dart';
 import 'package:ripple/features/auth/presentation/bloc/auth_state.dart';
 import 'package:ripple/shared/widgets/auth_widgets/field_label.dart';
-import 'package:ripple/shared/widgets/gradient_border_field.dart';
+import 'package:ripple/shared/common_widgets/gradient_border_field.dart';
 import 'package:ripple/shared/widgets/auth_widgets/gradient_button.dart';
 import 'package:ripple/shared/widgets/auth_widgets/gradient_text.dart';
 import 'package:ripple/shared/widgets/auth_widgets/or_divider.dart';

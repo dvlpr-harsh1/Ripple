@@ -1,13 +1,15 @@
-class UserEntity {
+class UserAuthEntity {
   final String id;
   final String email;
   final String? displayName;
-  final String? photoUrl;
+  final String? imgUrl;
+  final List? profileViews;
 
-  const UserEntity({
+  const UserAuthEntity({
     required this.id,
     required this.email,
     this.displayName,
-    this.photoUrl,
+    this.imgUrl,
+    this.profileViews,
   });
 }

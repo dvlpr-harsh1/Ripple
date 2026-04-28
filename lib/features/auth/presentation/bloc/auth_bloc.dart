@@ -1,4 +1,5 @@
 import 'package:bloc/bloc.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:ripple/features/auth/domain/repositories/auth_repository.dart';
 import 'package:ripple/features/auth/domain/usecases/login_usecase.dart';
 import 'package:ripple/features/auth/domain/usecases/sign_out_usecase.dart';
@@ -68,7 +69,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthSignOutRequested event,
     Emitter<AuthState> emit,
   ) async {
-    _signOut;
+    await _signOut();
     emit(UnAuthenticatedUser());
   }
 }
