@@ -43,9 +43,9 @@ class _AppShellState extends State<AppShell>
   // ── Layout constants ───────────────────────────────────────────
   static const double _navHeight = 65.0;
   static const double _navSideMargin = 20.0;
-  static const double _navBottomGap = 8.0;
-  static const double _fabNavGap = 10.0;   // ✅ gap between FAB bottom & nav top
-  static const double _fabRightMargin = 24.0; // ✅ proper right margin
+  static const double _navBottomGap = 0;
+  static const double _fabNavGap = .0;
+  static const double _fabRightMargin = 0;
 
   @override
   void initState() {
@@ -64,8 +64,10 @@ class _AppShellState extends State<AppShell>
       vsync: this,
       duration: const Duration(milliseconds: 500),
     );
-    _springAnim =
-        Tween<double>(begin: 0.0, end: 0.0).animate(_springController);
+    _springAnim = Tween<double>(
+      begin: 0.0,
+      end: 0.0,
+    ).animate(_springController);
     _springController.addListener(() {
       if (mounted) setState(() => _fabOffsetX = _springAnim.value);
     });
@@ -79,7 +81,7 @@ class _AppShellState extends State<AppShell>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this); // ✅
-    _setOnline(false);                             // ✅ mark offline on exit
+    _setOnline(false); // ✅ mark offline on exit
     _holdTimer?.cancel();
     _springController.dispose();
     _rippleController.dispose();
@@ -165,13 +167,17 @@ class _AppShellState extends State<AppShell>
     _springController.duration = const Duration(milliseconds: 600);
     _springAnim = TweenSequence<double>([
       TweenSequenceItem(
-        tween: Tween<double>(begin: 0.0, end: -28.0)
-            .chain(CurveTween(curve: Curves.easeOut)),
+        tween: Tween<double>(
+          begin: 0.0,
+          end: -28.0,
+        ).chain(CurveTween(curve: Curves.easeOut)),
         weight: 30,
       ),
       TweenSequenceItem(
-        tween: Tween<double>(begin: -28.0, end: 0.0)
-            .chain(CurveTween(curve: Curves.elasticOut)),
+        tween: Tween<double>(
+          begin: -28.0,
+          end: 0.0,
+        ).chain(CurveTween(curve: Curves.elasticOut)),
         weight: 70,
       ),
     ]).animate(_springController);
@@ -208,13 +214,12 @@ class _AppShellState extends State<AppShell>
     );
   }
 
-  // ✅ Fixed — no duplicate index, proper 4-tab mapping
   int _getIndexFromLocation() {
     final location = GoRouterState.of(context).fullPath ?? '';
     if (location.startsWith('/search')) return 1;
     if (location.startsWith('/notifications')) return 2;
     if (location.startsWith('/profile')) return 3;
-    return 0; // dashboard
+    return 0;
   }
 
   @override
@@ -229,7 +234,6 @@ class _AppShellState extends State<AppShell>
       backgroundColor: AppColors.black,
       body: Stack(
         children: [
-
           // ── Page content ────────────────────────────────────────
           widget.child,
 
@@ -320,7 +324,6 @@ class _AppShellState extends State<AppShell>
                   child: Stack(
                     alignment: Alignment.center,
                     children: [
-
                       // Ripple ring 1
                       if (_isHolding)
                         AnimatedBuilder(
@@ -335,8 +338,9 @@ class _AppShellState extends State<AppShell>
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(16),
                                   border: Border.all(
-                                    color: AppColors.gradientPurple
-                                        .withOpacity((1.0 - t) * 0.75),
+                                    color: AppColors.gradientPurple.withOpacity(
+                                      (1.0 - t) * 0.75,
+                                    ),
                                     width: 2,
                                   ),
                                 ),
@@ -359,8 +363,9 @@ class _AppShellState extends State<AppShell>
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(16),
                                   border: Border.all(
-                                    color: AppColors.gradientPink
-                                        .withOpacity((1.0 - t) * 0.5),
+                                    color: AppColors.gradientPink.withOpacity(
+                                      (1.0 - t) * 0.5,
+                                    ),
                                     width: 1.5,
                                   ),
                                 ),
@@ -447,8 +452,7 @@ class _NavItem extends StatelessWidget {
               style: TextStyle(
                 fontSize: 10,
                 color: isActive ? Colors.white : Colors.white38,
-                fontWeight:
-                    isActive ? FontWeight.w600 : FontWeight.w400,
+                fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
               ),
             ),
           ],

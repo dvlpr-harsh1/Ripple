@@ -10,11 +10,14 @@ class KnownUserEntity {
   final bool isOnline;
   final DateTime? lastSeen;
   final DateTime createdAt;
+
   final String lastMessage;
   final bool isTyping;
   final bool isBlocked;
   final int receivedMessagesCount;
   final String receivedMessagesTime;
+
+  final bool lastMessageDeleted;
 
   const KnownUserEntity({
     required this.id,
@@ -33,5 +36,6 @@ class KnownUserEntity {
     required this.isBlocked,
     required this.receivedMessagesCount,
     required this.receivedMessagesTime,
+    required this.lastMessageDeleted,
   });
 }

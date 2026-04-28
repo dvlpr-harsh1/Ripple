@@ -34,6 +34,7 @@ class UnknownUserEntity {
     lastMessage: '',
     isTyping: false,
     isBlocked: false,
+    lastMessageDeleted: false,
     receivedMessagesCount: 0,
     receivedMessagesTime: '--:--',
   );

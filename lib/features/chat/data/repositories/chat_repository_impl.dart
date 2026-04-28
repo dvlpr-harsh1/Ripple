@@ -39,6 +39,7 @@ class ChatRepositoryImpl implements ChatRepository {
                 text: '',
                 senderId: '',
                 timestamp: DateTime.now(),
+                isDeleted: false,
               ),
               typing: {},
               blocked: {},
@@ -124,22 +125,178 @@ class ChatRepositoryImpl implements ChatRepository {
 
   Future<void> deleteMessage({
     required String myUid,
+
     required String otherUid,
+
     required String messageId,
+
     required bool deleteForEveryOne,
   }) async {
     final chatId = getChatId(uid1: myUid, uid2: otherUid);
-    final msgDocRef = _firestore
+
+    final chatDocRef = _firestore
         .collection(AppStrings.chatCollection)
-        .doc(chatId)
+        .doc(chatId);
+
+    final msgDocRef = chatDocRef
         .collection(AppStrings.msgCollection)
         .doc(messageId);
 
+    final msgSnap = await msgDocRef.get();
+
+    if (!msgSnap.exists) return;
+
+    final data = msgSnap.data() as Map<String, dynamic>;
+
+    final senderId = data['senderId'] as String? ?? '';
+
+    final isRead = data['isRead'] as bool? ?? true;
+
+    final shouldDecrementUnread = senderId != myUid && !isRead;
+
+    final batch = _firestore.batch();
+
     if (deleteForEveryOne) {
-      await msgDocRef.update({'isDeleted': true, 'text': ''});
+      batch.update(msgDocRef, {'isDeleted': true, 'text': ''});
     } else {
-      await msgDocRef.update({
+      batch.update(msgDocRef, {
         'deletedFor': FieldValue.arrayUnion([myUid]),
+      });
+    }
+
+    if (shouldDecrementUnread) {
+      batch.update(chatDocRef, {
+        'unreadCount.$myUid': FieldValue.increment(-1),
+      });
+    }
+
+    await _refreshLastMessage(
+      chatDocRef: chatDocRef,
+
+      deletedMsgId: messageId,
+
+      myUid: myUid,
+
+      otherUid: otherUid,
+
+      batch: batch,
+
+      deleteForEveryone: deleteForEveryOne,
+    );
+
+    await batch.commit();
+  }
+
+  Future<void> _refreshLastMessage({
+    required DocumentReference chatDocRef,
+
+    required String deletedMsgId,
+
+    required String myUid,
+
+    required String otherUid,
+
+    required WriteBatch batch,
+
+    required bool deleteForEveryone,
+  }) async {
+    final msgs = await chatDocRef
+        .collection(AppStrings.msgCollection)
+        .orderBy('timestamp', descending: true)
+        .limit(2)
+        .get();
+
+    if (msgs.docs.isEmpty) return;
+
+    // Check if the deleted message is the current last message
+
+    final isLastMessage = msgs.docs.first.id == deletedMsgId;
+
+    if (!isLastMessage) return;
+
+    if (msgs.docs.length == 1) {
+      // Only message — clear lastMessage
+
+      batch.update(chatDocRef, {
+        'lastMessage': {
+          'text': '',
+
+          'senderId': '',
+
+          'timestamp': FieldValue.serverTimestamp(),
+
+          'isDeleted': false,
+        },
+      });
+
+      return;
+    }
+
+    // Use second most recent message as new lastMessage
+
+    final prevData = msgs.docs[1].data();
+
+    final prevIsDeleted = prevData['isDeleted'] as bool? ?? false;
+
+    batch.update(chatDocRef, {
+      'lastMessage': {
+        'text': prevIsDeleted ? '' : (prevData['text'] ?? ''),
+
+        'senderId': prevData['senderId'] ?? '',
+
+        'timestamp': prevData['timestamp'],
+
+        'isDeleted': prevIsDeleted,
+      },
+    });
+  }
+
+  // ✅ If deleted message was the last message, update lastMessage to previous one
+  Future<void> _updateLastMessageIfNeeded({
+    required DocumentReference chatDocRef,
+    required DocumentReference msgDocRef,
+    required String chatId,
+    required String myUid,
+    required String otherUid,
+    required WriteBatch batch,
+  }) async {
+    // Get current lastMessage
+    final chatSnap = await chatDocRef.get();
+    final chatData = chatSnap.data() as Map<String, dynamic>? ?? {};
+    final lastMsg = chatData['lastMessage'] as Map<String, dynamic>? ?? {};
+    final lastMsgSenderId = lastMsg['senderId'] as String? ?? '';
+
+    // Check if the message being deleted is the last one
+    // by seeing if its senderId matches and timestamp is close
+    // Simplest: fetch the previous message and update
+    final prevMessages = await chatDocRef
+        .collection(AppStrings.msgCollection)
+        .orderBy('timestamp', descending: true)
+        .limit(
+          2,
+        ) // get top 2 — first is the one being deleted, second is new last
+        .get();
+
+    if (prevMessages.docs.length >= 2) {
+      final newLastDoc = prevMessages.docs[1];
+      final newLastData = newLastDoc.data();
+      batch.update(chatDocRef, {
+        'lastMessage': {
+          'text': newLastData['isDeleted'] == true
+              ? ''
+              : (newLastData['text'] ?? ''),
+          'senderId': newLastData['senderId'] ?? '',
+          'timestamp': newLastData['timestamp'],
+        },
+      });
+    } else if (prevMessages.docs.length == 1) {
+      // Only one message and it's being deleted — clear lastMessage
+      batch.update(chatDocRef, {
+        'lastMessage': {
+          'text': '',
+          'senderId': '',
+          'timestamp': FieldValue.serverTimestamp(),
+        },
       });
     }
   }
@@ -200,20 +357,22 @@ class ChatRepositoryImpl implements ChatRepository {
   /// Chat Messages
   Stream<List<MessageModel>> getMessages({
     required String myUid,
+
     required String otherUid,
   }) {
     final chatId = getChatId(uid1: myUid, uid2: otherUid);
+
     return _firestore
-        .collection(AppStrings.chatCollection) // ✅
+        .collection(AppStrings.chatCollection)
         .doc(chatId)
-        .collection(AppStrings.msgCollection) // ✅
+        .collection(AppStrings.msgCollection)
         .orderBy('timestamp', descending: false)
         .snapshots()
         .map(
           (snap) => snap.docs
               .map((doc) => MessageModel.fromJson(doc))
               .where((msg) => !msg.isDeletedFor(myUid))
-              .toList(),
+              .toList(), // ✅ keep isDeleted=true but show deleted bubble
         );
   }
 }

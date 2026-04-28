@@ -1,14 +1,13 @@
-// Represents chats/{chatId}/lastMessage object
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 class LastMessageEntity {
   final String text;
   final String senderId;
   final DateTime timestamp;
+  final bool isDeleted;
 
-  LastMessageEntity({
+  const LastMessageEntity({
     required this.text,
     required this.senderId,
     required this.timestamp,
+    required this.isDeleted,
   });
 }

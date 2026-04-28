@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:ripple/const/theme/app_colors.dart';
 
 import '../../../features/dashboard/domain/entities/known_user_entity.dart';
 import '../../common_widgets/custom_loading_widget.dart';
@@ -99,11 +100,13 @@ class ChatCard extends StatelessWidget {
 
                 const SizedBox(height: 5),
 
+               
+
                 // Typing / last message
-                knownUserEntity.isTyping
-                    ? Row(
-                        children: [
-                          CustomLoadingWidget(),
+               // Replace the last message Text widget:
+knownUserEntity.isTyping
+    ? Row(
+     children: [CustomLoadingWidget(),
                           const SizedBox(width: 6),
                           ShaderMask(
                             shaderCallback: (b) => _igGradient.createShader(b),
@@ -115,18 +118,30 @@ class ChatCard extends StatelessWidget {
                                     fontStyle: FontStyle.italic,
                                   ),
                             ),
-                          ),
-                        ],
-                      )
-                    : Text(
-                        knownUserEntity.lastMessage,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                          color: hasUnread ? Colors.white70 : Colors.white38,
-                        ),
-                      ),
-
+                          ),],)
+    : knownUserEntity.lastMessageDeleted // ✅ new field
+        ? Row(
+            children: [
+              Icon(CupertinoIcons.delete,
+                  size: 12, color: AppColors.textHint),
+              const SizedBox(width: 4),
+              Text(
+                'Message deleted',
+                style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                  color: AppColors.textHint,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+          )
+        : Text(
+            knownUserEntity.lastMessage,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.bodySmall!.copyWith(
+              color: hasUnread ? Colors.white70 : Colors.white38,
+            ),
+          ),
                 // Actions
                 Row(
                   children: [

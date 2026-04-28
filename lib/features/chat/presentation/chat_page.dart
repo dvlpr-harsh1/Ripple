@@ -39,7 +39,7 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
   late AnimationController _attachController;
   late String _myUid;
   late String _otherUid;
-  late String _otherName; // ✅ store name for avatar
+  late String _otherName;
   late ChatBloc _chatBloc;
 
   @override
@@ -1137,7 +1137,7 @@ class _MessageBubble extends StatefulWidget {
   final String otherName;
   final bool grouped;
   final bool isActionsVisible;
-  final Function(String id) onActionsToggle; 
+  final Function(String id) onActionsToggle;
   final VoidCallback onReply;
   final Function(String messageId, bool forEveryone) onDelete;
   final Function(String text) onQuickReply;

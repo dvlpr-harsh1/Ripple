@@ -20,6 +20,7 @@ class KnownUserModel extends KnownUserEntity {
     required super.isBlocked,
     required super.receivedMessagesCount,
     required super.receivedMessagesTime,
+    required super.lastMessageDeleted,
   });
 
   // ── called on signup — writes to users/{uid} ──────
@@ -44,56 +45,51 @@ class KnownUserModel extends KnownUserEntity {
     };
   }
 
-  factory KnownUserModel.fromMerged({
-    required DocumentSnapshot userDoc,
-    required DocumentSnapshot chatDoc,
-    required String myUid,
-  }) {
-    final u = userDoc.data() as Map<String, dynamic>;
-    final c = chatDoc.data() as Map<String, dynamic>;
+factory KnownUserModel.fromMerged({
+  required DocumentSnapshot userDoc,
+  required DocumentSnapshot chatDoc,
+  required String myUid,
+}) {
+  final u = userDoc.data() as Map<String, dynamic>;
+  final c = chatDoc.data() as Map<String, dynamic>;
 
-    final lastMsg = c['lastMessage'] as Map<String, dynamic>? ?? {};
-    final unreadCount = Map<String, int>.from(c['unreadCount'] ?? {});
-    final typing = Map<String, bool>.from(c['typing'] ?? {});
-    final blocked = Map<String, bool>.from(c['blocked'] ?? {});
+  final lastMsg = c['lastMessage'] as Map<String, dynamic>? ?? {};
+  final unreadCount = Map<String, int>.from(c['unreadCount'] ?? {});
+  final typing = Map<String, bool>.from(c['typing'] ?? {});
+  final blocked = Map<String, bool>.from(c['blocked'] ?? {});
 
-    // Other person's uid
-    final participants = List<String>.from(c['participants'] ?? []);
-    final otherUid = participants.firstWhere(
-      (id) => id != myUid,
-      orElse: () => '',
-    );
+  final bool lastMessageDeleted = lastMsg['isDeleted'] ?? false; // ✅ FIXED
 
-    // Format timestamp → "10:32"
-    final msgTimestamp = (lastMsg['timestamp'] as Timestamp?)?.toDate();
-    final timeString = msgTimestamp != null
-        ? '${msgTimestamp.hour.toString().padLeft(2, '0')}:'
-              '${msgTimestamp.minute.toString().padLeft(2, '0')}'
-        : '--:--';
+  final participants = List<String>.from(c['participants'] ?? []);
+  final otherUid = participants.firstWhere(
+    (id) => id != myUid,
+    orElse: () => '',
+  );
 
-    return KnownUserModel(
-      // from users/
-      id: userDoc.id,
-      name: u['name'] ?? '',
-      nameLower: u['nameLower'] ?? '',
-      username: u['username'] ?? '',
-      usernameLower: u['usernameLower'] ?? '',
-      email: u['email'] ?? '',
-      imgUrl: u['imgUrl'] ?? '',
-      badge: u['badge'] ?? '',
-      isOnline: u['isOnline'] ?? false,
-      lastSeen: (u['lastSeen'] as Timestamp?)?.toDate(),
-      createdAt: (u['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+  final msgTimestamp = (lastMsg['timestamp'] as Timestamp?)?.toDate();
+  final timeString = msgTimestamp != null
+      ? '${msgTimestamp.hour.toString().padLeft(2, '0')}:'
+        '${msgTimestamp.minute.toString().padLeft(2, '0')}'
+      : '--:--';
 
-      // from chats/
-      lastMessage: lastMsg['text'] ?? '',
-      isTyping: typing[otherUid] ?? false, // other person typing
-      isBlocked: blocked[myUid] ?? false, // am I blocked
-      receivedMessagesCount: unreadCount[myUid] ?? 0, // my unread count
-      receivedMessagesTime: timeString, // formatted time
-    );
-  }
+  return KnownUserModel(
+    id: userDoc.id,
+    name: u['name'] ?? '',
+    nameLower: u['nameLower'] ?? '',
+    username: u['username'] ?? '',
+    usernameLower: u['usernameLower'] ?? '',
+    email: u['email'] ?? '',
+    imgUrl: u['imgUrl'] ?? '',
+    badge: u['badge'] ?? '',
+    isOnline: u['isOnline'] ?? false,
+    lastSeen: (u['lastSeen'] as Timestamp?)?.toDate(),
+    createdAt: (u['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
 
-
-
-}
+    lastMessage: lastMsg['text'] ?? '',
+    isTyping: typing[otherUid] ?? false,
+    isBlocked: blocked[myUid] ?? false,
+    receivedMessagesCount: unreadCount[myUid] ?? 0,
+    receivedMessagesTime: timeString,
+    lastMessageDeleted: lastMessageDeleted, // ✅
+  );
+}}

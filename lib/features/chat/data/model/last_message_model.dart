@@ -7,12 +7,14 @@ class LastMessageModel extends LastMessageEntity {
     required super.text,
     required super.senderId,
     required super.timestamp,
+    required super.isDeleted, 
   });
 
   Map<String, dynamic> toJson() => {
-    "text": text,
-    "senderId": senderId,
-    "timestamp": FieldValue.serverTimestamp(),
+    'text': text,
+    'senderId': senderId,
+    'timestamp': FieldValue.serverTimestamp(),
+    'isDeleted': isDeleted,
   };
 
   factory LastMessageModel.fromJson(Map<String, dynamic> data) {
@@ -20,6 +22,7 @@ class LastMessageModel extends LastMessageEntity {
       text: data['text'] ?? '',
       senderId: data['senderId'] ?? '',
       timestamp: (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      isDeleted: data['isDeleted'] ?? false, 
     );
   }
 }
